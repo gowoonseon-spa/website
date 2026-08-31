@@ -186,9 +186,8 @@ TEL = f'tel:{PHONE}'
 
 SITE_URL = 'https://gowoonseon.com'  # 2026-08-31 확정 — canonical/og/sitemap 절대경로의 원천
 
-# 클라이언트 TODO — 네이버 서치어드바이저에서 발급받은 content 문자열만 붙여넣기.
-# 비어 있으면 메타 태그 자체가 출력되지 않음. (구글 서치콘솔은 DNS 인증 권장 — 태그 불필요)
-NAVER_SITE_VERIFICATION = ''
+# 네이버 서치어드바이저 소유 확인 태그 (2026-09-01 발급). 구글 서치콘솔은 DNS 인증 — 태그 불필요.
+NAVER_SITE_VERIFICATION = 'a88976b47489438adaa9e9af877df7ad980a9fa9'
 
 # ---- 파생 문구 ----------------------------------------------------------
 w = lambda n: f'{n:,}'
