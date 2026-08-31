@@ -42,10 +42,32 @@ collections:
             label: "가격 정책"
             widget: "object"
             fields:
-              - { name: "discount_5", label: "5회 선결제 할인율 (%)", widget: "number", value_type: "int", min: 0, max: 50 }
-              - { name: "discount_10", label: "10회 선결제 할인율 (%)", widget: "number", value_type: "int", min: 0, max: 50 }
-              - { name: "discount_member", label: "멤버십 할인율 (%)", widget: "number", value_type: "int", min: 0, max: 50 }
               - { name: "vat_note", label: "부가세 안내 문구", widget: "string" }
+          - name: "memberships"
+            label: "멤버십 (선불 충전형)"
+            widget: "object"
+            fields:
+              - { name: "headline", label: "섹션 제목", widget: "string" }
+              - { name: "lede", label: "소개 문장", widget: "text", hint: "멤버십이 어떤 제도인지 한두 문장으로" }
+              - name: "how"
+                label: "이용 안내 3단계"
+                label_singular: "단계"
+                widget: "list"
+                allow_add: false          # 단계 수는 3으로 고정 (레이아웃)
+                field: { name: "step", label: "단계 설명", widget: "string" }
+              - name: "tiers"
+                label: "멤버십 3종"
+                label_singular: "멤버십"
+                widget: "list"
+                collapsed: true
+                allow_add: false          # 종수 변경은 개발 작업
+                summary: "{{fields.name}} — {{fields.amount}}원 (−{{fields.discount}}%)"
+                fields:
+                  - { name: "name", label: "멤버십 이름", widget: "string", hint: "예: 고운 멤버십 — 이름은 자유롭게 바꿀 수 있습니다" }
+                  - { name: "amount", label: "충전 금액 (원)", widget: "number", value_type: "int", min: 100000, hint: "만원 단위 — 예: 1000000" }
+                  - { name: "discount", label: "할인율 (%)", widget: "number", value_type: "int", min: 1, max: 60, hint: "이 멤버십으로 결제 시 모든 프로그램에 적용되는 할인율" }
+                  - { name: "desc", label: "한 줄 설명", widget: "string" }
+              - { name: "note", label: "하단 안내문", widget: "text" }
           - name: "categories"
             label: "프로그램 카테고리"
             label_singular: "카테고리"

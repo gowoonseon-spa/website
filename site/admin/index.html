@@ -41,6 +41,14 @@ CMS.registerPreviewStyle(
       var d = this.props.entry.get('data');
       d = d ? d.toJS() : {};
       var g = d.global || {}, pr = d.pricing || {};
+      var mem = d.memberships || {};
+      var mtiers = mem.tiers || [];
+      function memShort(n) { var s = (n || '').replace('멤버십', '').trim(); return s || n || ''; }
+      var mds = mtiers.map(function (t) { return t.discount || 0; });
+      var memSummary = !mds.length ? '' :
+        (Math.min.apply(null, mds) === Math.max.apply(null, mds)
+          ? '−' + mds[0] + '%'
+          : '−' + Math.min.apply(null, mds) + '~' + Math.max.apply(null, mds) + '%');
       var home = d.home || {}, cats = d.categories || [];
       var about = d.about || {}, visit = d.visit || {};
       var hero = home.hero || {}, phil = home.philosophy || {};
@@ -92,9 +100,9 @@ CMS.registerPreviewStyle(
             h('span', { className: 'min' }, (p.minutes || 0) + '분'),
             h('span', { className: 'price' }, fmt(p.price) + '원')),
           h('div', { className: 'tierline' },
-            '5회 ' + fmt(tier(p.price || 0, pr.discount_5 || 0)) +
-            ' · 10회 ' + fmt(tier(p.price || 0, pr.discount_10 || 0)) +
-            ' · 멤버십 ' + fmt(tier(p.price || 0, pr.discount_member || 0))));
+            mtiers.map(function (t) {
+              return memShort(t.name) + ' ' + fmt(tier(p.price || 0, t.discount || 0));
+            }).join(' · ')));
       }
 
       function catMeta(cat) {
@@ -197,8 +205,7 @@ CMS.registerPreviewStyle(
                   h('span', { className: 'arrow' }, '›'));
               })),
             h('p', { className: 'fineprint' },
-              (pr.vat_note || '') + ' · 5회 선결제 −' + (pr.discount_5 || 0) + '% · 10회 선결제 −' +
-              (pr.discount_10 || 0) + '% · 멤버십 −' + (pr.discount_member || 0) + '% · 예약제 운영'))),
+              (pr.vat_note || '') + ' · 멤버십 충전 시 ' + memSummary + ' 혜택 · 예약제 운영'))),
 
         /* 프로그램 상세 (전 카테고리) */
         cats.map(function (cat, i) {
@@ -219,6 +226,27 @@ CMS.registerPreviewStyle(
                     priceBlock(p));
                 }))));
         }),
+
+        /* 멤버십 (선불 충전형) */
+        h('section', { className: 'section membership' },
+          h('div', { className: 'container' },
+            h('div', { className: 'eyebrow' }, 'MEMBERSHIP'),
+            h('h2', { className: 'section-title' }, mem.headline || ''),
+            h('p', { className: 'mem-lede' }, mem.lede || ''),
+            h('ol', { className: 'mem-how' }, (mem.how || []).map(function (s, i) {
+              return h('li', { key: i },
+                h('span', { className: 'n' }, ('0' + (i + 1)).slice(-2)),
+                h('p', {}, s));
+            })),
+            h('div', { className: 'mem-tiers' }, mtiers.map(function (t, i) {
+              return h('div', { className: 'mem-card', key: i },
+                h('h3', {}, t.name || ''),
+                h('div', { className: 'amount' }, fmt(t.amount),
+                  h('span', { className: 'won' }, '원')),
+                h('div', { className: 'benefit' }, '모든 프로그램 −' + (t.discount || 0) + '% 혜택'),
+                h('p', { className: 'mdesc' }, t.desc || ''));
+            })),
+            h('p', { className: 'mem-note' }, mem.note || ''))),
 
         /* 원장 소개 */
         h('section', { className: 'section', style: { background: 'var(--card)' } },

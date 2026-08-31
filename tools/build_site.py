@@ -40,6 +40,8 @@ STRUCTURE = {
     # space.figures는 동결 예외 — 흐르는 갤러리는 장수와 무관하게 안전 (최소 4장만)
     'home_creds': 2,
     'director_creds': 5,
+    'membership_tiers': 3,
+    'membership_how': 3,
 }
 
 # ---- 콘텐츠 검증 — 렌더링을 깨뜨리는 값만 차단(에러), 나머지는 참고용 경고 ----
@@ -80,6 +82,21 @@ def validate(c):
                 errors.append(f'{where}: 구성(칩)이 비어 있습니다')
             if len(p.get('name') or '') > 16:
                 warnings.append(f'{where}: 프로그램 이름이 16자를 넘습니다 — 카드에서 줄바꿈될 수 있음')
+    # 멤버십 — 선불 충전형 (2026-08-31 미팅에서 확정된 모델)
+    _frozen_mem = ' 항목 추가·삭제는 개발 작업입니다 — 삭제(X)했다면 되돌려 주세요'
+    mts = c['memberships'].get('tiers', [])
+    if len(mts) != STRUCTURE['membership_tiers']:
+        errors.append(f'memberships.tiers: 멤버십은 {STRUCTURE["membership_tiers"]}종이어야 합니다 — 현재 {len(mts)}종.{_frozen_mem}')
+    for t in mts:
+        mwhere = f'멤버십 "{t.get("name") or "(이름 없음)"}"'
+        if not t.get('name'):
+            errors.append('memberships.tiers: 이름 없는 멤버십이 있습니다')
+        if not isinstance(t.get('amount'), int) or t['amount'] < 100000 or t['amount'] % 10000:
+            errors.append(f'{mwhere}: 충전 금액은 100,000원 이상, 만원 단위여야 합니다')
+        if not isinstance(t.get('discount'), int) or not 1 <= t['discount'] <= 60:
+            errors.append(f'{mwhere}: 할인율은 1–60 사이 숫자(%)여야 합니다')
+    if len(c['memberships'].get('how', [])) != STRUCTURE['membership_how']:
+        errors.append(f'memberships.how: 이용 안내 단계는 {STRUCTURE["membership_how"]}줄이어야 합니다.{_frozen_mem}')
     names = [p['name'] for cat in c['categories'] for p in cat['programs']]
     for ref in c['home']['sig_cards']:
         if ref['program'] not in names:
@@ -157,6 +174,7 @@ for _k in ('hours_weekday', 'hours_sat'):
 CONTENT = _esc(_raw)
 G = CONTENT['global']
 PRICING = CONTENT['pricing']
+MEMBERSHIPS = CONTENT['memberships']
 CATEGORIES = CONTENT['categories']
 HOME = CONTENT['home']
 PROGRAMS_PAGE = CONTENT['programs_page']
@@ -173,10 +191,23 @@ NAVER_SITE_VERIFICATION = ''
 # ---- 파생 문구 ----------------------------------------------------------
 w = lambda n: f'{n:,}'
 
+def tier_amount(price, discount):
+    """멤버십 차감 금액 — 천원 단위 내림 (예: 450,000 · −20% → 360,000)."""
+    return price * (100 - discount) // 100 // 1000 * 1000
+
+def mem_short(name):
+    """티어 라벨 축약 — '고운 멤버십' → '고운'. 이름을 바꿔도 자동 추종."""
+    s = name.replace('멤버십', '').strip()
+    return s or name
+
 def tier_prices(price):
-    """할인 티어 금액 — 천원 단위 내림 (예: 450,000 → 405,000 / 382,000 / 360,000)."""
-    return tuple(price * (100 - d) // 100 // 1000 * 1000
-                 for d in (PRICING['discount_5'], PRICING['discount_10'], PRICING['discount_member']))
+    """프로그램 카드 멤버십 차감가 라인 — '고운 405,000 · 깊은 382,000 · 온전 360,000'."""
+    return ' · '.join(f'{mem_short(t["name"])} {w(tier_amount(price, t["discount"]))}'
+                      for t in MEMBERSHIPS['tiers'])
+
+# 파인프린트용 할인 요약 — 전 티어 동일하면 '−20%', 다르면 '−10~20%'
+_mds = [t['discount'] for t in MEMBERSHIPS['tiers']]
+MEM_DISCOUNT_SUMMARY = f'−{_mds[0]}%' if len(set(_mds)) == 1 else f'−{min(_mds)}~{max(_mds)}%'
 
 def find_prog(name):
     for cat in CATEGORIES:
@@ -365,11 +396,10 @@ def chips(items):
     return '<div class="chips">' + ''.join(f'<span>{i}</span>' for i in items) + '</div>'
 
 def price_block(minutes, price):
-    a, b, c = tier_prices(price)
     return f'''<div class="price-block">
         <div class="dline" style="--min:{minutes}"></div>
         <div class="pb-row"><span class="min">{minutes}분</span><span class="price">{w(price)}원</span></div>
-        <div class="tierline">5회 {w(a)} · 10회 {w(b)} · 멤버십 {w(c)}</div>
+        <div class="tierline">{tier_prices(price)}</div>
       </div>'''
 
 def prog(p):
@@ -442,8 +472,7 @@ for cat in CATEGORIES:
         f'<span class="eng">{eng_short}</span><span class="desc">{cat["short_desc"]}</span>'
         f'<span class="meta">{cat_range_meta(cat)}</span><span class="arrow">›</span></a>')
 
-home_fineprint = (f"{PRICING['vat_note']} · 5회 선결제 −{PRICING['discount_5']}%"
-                  f" · 10회 선결제 −{PRICING['discount_10']}% · 멤버십 −{PRICING['discount_member']}% · 예약제 운영")
+home_fineprint = f"{PRICING['vat_note']} · 멤버십 충전 시 {MEM_DISCOUNT_SUMMARY} 혜택 · 예약제 운영"
 
 index_body = f'''
 
@@ -590,7 +619,31 @@ for cat in CATEGORIES:
   </div>
 </section>''')
 
-cat_nav = ''.join(f'<a href="#{c["id"]}">{c["nav_label"]}</a>' for c in CATEGORIES)
+cat_nav = (''.join(f'<a href="#{c["id"]}">{c["nav_label"]}</a>' for c in CATEGORIES)
+           + '<a href="#membership">멤버십</a>')
+
+mem_how = ''.join(
+    f'<li><span class="n">{i + 1:02d}</span><p>{s}</p></li>'
+    for i, s in enumerate(MEMBERSHIPS['how']))
+mem_cards = ''.join(f'''
+      <div class="mem-card">
+        <h3>{t['name']}</h3>
+        <div class="amount">{w(t['amount'])}<span class="won">원</span></div>
+        <div class="benefit">모든 프로그램 −{t['discount']}% 혜택</div>
+        <p class="mdesc">{t['desc']}</p>
+      </div>''' for t in MEMBERSHIPS['tiers'])
+membership_section = f'''
+<section class="section membership" id="membership">
+  <div class="container">
+    <div class="eyebrow">MEMBERSHIP</div>
+    <h2 class="section-title">{MEMBERSHIPS['headline']}</h2>
+    <p class="mem-lede">{MEMBERSHIPS['lede']}</p>
+    <ol class="mem-how">{mem_how}</ol>
+    <div class="mem-tiers">{mem_cards}
+    </div>
+    <p class="mem-note">{MEMBERSHIPS['note']}</p>
+  </div>
+</section>'''
 
 cta_note = (f"{G['notice_reservation'].rstrip('.')} · {G['notice_pregnant'].rstrip('.')}")
 
@@ -603,13 +656,12 @@ programs_body = f'''
 <nav class="cat-nav" aria-label="프로그램 카테고리"><div class="row container">{cat_nav}</div></nav>
 <div class="container" style="padding-top: 40px; padding-bottom: 46px;">
   <div class="tiers">
-    <div><span class="l">5회 선결제</span><span class="v">−{PRICING['discount_5']}%</span></div>
-    <div><span class="l">10회 선결제</span><span class="v">−{PRICING['discount_10']}%</span></div>
-    <div><span class="l">멤버십 전용</span><span class="v">−{PRICING['discount_member']}%</span></div>
+    {''.join(f'<a href="#membership"><span class="l">{t["name"]}</span><span class="v">−{t["discount"]}%</span></a>' for t in MEMBERSHIPS['tiers'])}
   </div>
   <div class="legend"><span class="dline" aria-hidden="true"></span><span>가는 선의 길이는 관리 시간을 뜻합니다 — 90분</span></div>
 </div>
 {''.join(cat_sections)}
+{membership_section}
 <div class="container"><p class="fineprint" style="padding: 34px 0 44px 0; margin: 0;">{PRICING['vat_note']}</p></div>
 <section class="section cta-band on-dark">
   <div class="container inner">
