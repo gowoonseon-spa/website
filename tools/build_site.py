@@ -570,7 +570,7 @@ index_body = f'''
 
 <section class="section" style="background: var(--card);">
   <div class="container product-split">
-    <img class="main" src="assets/img/products-set.jpg" alt="조시안로르 제품 라인" loading="lazy">
+    <img class="main" src="assets/img/products-set.jpg" alt="조시앙로르 제품 라인" loading="lazy">
     <div class="text">
       <div class="eyebrow">JOSIANE LAURE, PARIS</div>
       <h2>{HOME['product']['headline']}</h2>
@@ -740,12 +740,12 @@ about_body = f'''
       <h2>{ABOUT['product']['headline']}</h2>
       <p class="desc">{ABOUT['product']['desc']}</p>
       <div class="thumb-row">
-        <img src="assets/img/product-hand.jpg" alt="손 위의 조시안로르 세럼" loading="lazy">
+        <img src="assets/img/product-hand.jpg" alt="손 위의 조시앙로르 세럼" loading="lazy">
         <img src="assets/img/product-macro.jpg" alt="캔들 곁의 오일 보틀" loading="lazy">
         <img src="assets/img/massage1.jpg" alt="제품을 사용하는 관리 장면" loading="lazy">
       </div>
     </div>
-    <img class="main" src="assets/img/products-set.jpg" alt="조시안로르 제품 라인" loading="lazy">
+    <img class="main" src="assets/img/products-set.jpg" alt="조시앙로르 제품 라인" loading="lazy">
   </div>
 </section>
 
@@ -829,7 +829,7 @@ PAGES = [
      '전신·얼굴&헤드·부분바디·산모·수험생·웨딩 — 고운:선의 모든 프로그램과 가격 안내. 모든 가격은 부가세 포함입니다.',
      'programs', False, programs_body),
     ('about.html', '고운:선 이야기',
-     '곱다, 그리고 선(線) — 고운:선의 철학, 원장, 조시안로르 제품, 그리고 공간의 이야기.',
+     '곱다, 그리고 선(線) — 고운:선의 철학, 원장, 조시앙로르 제품, 그리고 공간의 이야기.',
      'about', False, about_body),
     ('visit.html', '오시는 길 | 고운:선',
      '경기 용인시 수지구 광교중앙로 310 신명프라자 4층 404호 · 예약제 운영 · 지하주차장 주차등록 지원.',

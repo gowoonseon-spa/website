@@ -200,7 +200,7 @@ collections:
                       - { name: "caption", label: "사진 아래 라벨", widget: "string" }
                       - { name: "alt", label: "사진 설명 (화면낭독기용)", widget: "string", required: false }
               - name: "product"
-                label: "제품(조시안로르) 섹션"
+                label: "제품(조시앙로르) 섹션"
                 widget: "object"
                 fields:
                   - { name: "headline", label: "제목", widget: "text" }
