@@ -1,0 +1,267 @@
+# 고운:선 콘텐츠 관리 (Decap CMS) — 프로덕션 설정
+# 개발용 로컬 시연 설정(local_backend)은 개발 repo 쪽 config.yml에만 있음
+
+backend:
+  name: github
+  repo: gowoonseon-spa/website
+  branch: main
+
+media_folder: "site/assets/img"
+public_folder: "assets/img"
+
+collections:
+  - name: "content"
+    label: "사이트 콘텐츠"
+    description: "카피·가격·영업시간·연락처를 수정합니다. 저장하면 사이트에 반영됩니다."
+    files:
+      - name: "main"
+        label: "카피 · 가격 · 기본정보"
+        file: "content/content.json"
+        fields:
+          - name: "global"
+            label: "기본 정보 (전화·주소·영업시간·안내문)"
+            widget: "object"
+            collapsed: false
+            fields:
+              - { name: "phone", label: "전화번호", widget: "string", pattern: ["^01[0-9]-[0-9]{3,4}-[0-9]{4}$", "010-0000-0000 형식으로 입력하세요"] }
+              - { name: "address_road", label: "도로명 주소", widget: "string" }
+              - { name: "address_building", label: "건물명", widget: "string" }
+              - { name: "address_room", label: "층·호수", widget: "string", hint: "예: 4층 404호" }
+              - { name: "address_jibun", label: "지번 주소", widget: "string" }
+              - { name: "hours_weekday", label: "평일 영업시간", widget: "string", pattern: ["^[0-9]{1,2}:[0-9]{2} ?[–-] ?[0-9]{1,2}:[0-9]{2}$", "예: 10:30 - 21:30"] }
+              - { name: "hours_sat", label: "토요일 영업시간", widget: "string", pattern: ["^[0-9]{1,2}:[0-9]{2} ?[–-] ?[0-9]{1,2}:[0-9]{2}$", "예: 10:30 - 15:00"] }
+              - { name: "hours_sun", label: "일요일", widget: "string", hint: "예: 정기휴무" }
+              - { name: "biz_no", label: "사업자등록번호", widget: "string" }
+              - { name: "owner_name", label: "대표자명", widget: "string" }
+              - { name: "blog_url", label: "네이버 블로그 주소", widget: "string", required: false, hint: "채우면 사이트 하단의 [네이버 블로그] 자리가 실제 링크로 바뀝니다" }
+              - { name: "insta_url", label: "인스타그램 주소", widget: "string", required: false, hint: "채우면 사이트 하단의 [인스타그램] 자리가 실제 링크로 바뀝니다" }
+              - { name: "notice_reservation", label: "예약 안내문", widget: "string" }
+              - { name: "notice_pregnant", label: "임산부 안내문", widget: "string" }
+              - { name: "notice_parking", label: "주차 안내문", widget: "string" }
+          - name: "pricing"
+            label: "가격 정책"
+            widget: "object"
+            fields:
+              - { name: "discount_5", label: "5회 선결제 할인율 (%)", widget: "number", value_type: "int", min: 0, max: 50 }
+              - { name: "discount_10", label: "10회 선결제 할인율 (%)", widget: "number", value_type: "int", min: 0, max: 50 }
+              - { name: "discount_member", label: "멤버십 할인율 (%)", widget: "number", value_type: "int", min: 0, max: 50 }
+              - { name: "vat_note", label: "부가세 안내 문구", widget: "string" }
+          - name: "categories"
+            label: "프로그램 카테고리"
+            label_singular: "카테고리"
+            widget: "list"
+            collapsed: true
+            allow_add: false
+            summary: "{{fields.name}}"
+            fields:
+              - { name: "id", label: "고유 ID (변경 금지)", widget: "string", pattern: ["^[a-z]+$", "영문 소문자만 — 페이지 링크 주소로 쓰이므로 바꾸지 마세요"], hint: "⚠️ 바꾸면 홈 화면의 바로가기 링크가 끊어집니다" }
+              - { name: "name", label: "카테고리 이름", widget: "string" }
+              - { name: "eng", label: "영문 라벨", widget: "string" }
+              - { name: "watermark", label: "배경 워터마크 글자", widget: "string" }
+              - { name: "nav_label", label: "상단 탭 짧은 이름", widget: "string" }
+              - { name: "desc", label: "카테고리 소개 문장", widget: "text" }
+              - { name: "short_desc", label: "홈 화면용 한 줄 소개", widget: "string" }
+              - name: "programs"
+                label: "프로그램"
+                label_singular: "프로그램"
+                widget: "list"
+                allow_add: false
+                summary: "{{fields.name}} — {{fields.minutes}}분 {{fields.price}}원"
+                fields:
+                  - { name: "name", label: "프로그램 이름", widget: "string", hint: "홈 시그니처 카드에 연결된 이름(온전·얼굴:선)을 바꾸면 '홈 화면' 섹션의 연결 이름도 같이 바꿔야 합니다" }
+                  - { name: "minutes", label: "관리 시간 (분)", widget: "number", value_type: "int", min: 10, max: 360 }
+                  - { name: "price", label: "정가 (원)", widget: "number", value_type: "int", min: 10000, max: 2000000, step: 1000, hint: "천원 단위 — 할인가(5회/10회/멤버십)는 할인율에 따라 자동 계산됩니다" }
+                  - name: "components"
+                    label: "구성 (칩)"
+                    label_singular: "구성"
+                    widget: "list"
+                    allow_add: false
+                    field: { name: "item", label: "구성", widget: "string" }
+                  - { name: "desc", label: "설명 (선택)", widget: "string", required: false }
+                  - { name: "tag", label: "태그 (선택)", widget: "string", required: false, hint: "예: SIGNATURE, 산전관리" }
+          - name: "home"
+            label: "홈 화면"
+            widget: "object"
+            collapsed: true
+            fields:
+              - name: "hero"
+                label: "첫 화면 (히어로)"
+                widget: "object"
+                fields:
+                  - { name: "headline", label: "큰 제목", widget: "text", hint: "줄바꿈 그대로 표시됩니다" }
+                  - { name: "sub", label: "보조 문장", widget: "string" }
+              - name: "philosophy"
+                label: "철학 섹션"
+                widget: "object"
+                fields:
+                  - { name: "headline", label: "제목", widget: "text" }
+                  - { name: "body", label: "본문", widget: "text" }
+              - { name: "reveal_sentence", label: "진심의 문장 (스크롤 애니메이션)", widget: "string", hint: "스크롤하면 단어가 하나씩 떠오르는 문장 — 단어 수는 자유입니다" }
+              - name: "sig_cards"
+                label: "시그니처 카드 연결"
+                label_singular: "카드"
+                widget: "list"
+                min: 2
+                max: 2
+                allow_add: false
+                summary: "{{fields.program}}"
+                fields:
+                  - { name: "program", label: "연결할 프로그램 이름", widget: "string", hint: "프로그램 카테고리에 있는 이름과 정확히 일치해야 합니다" }
+                  - { name: "image", label: "사진", widget: "image" }
+                  - { name: "alt", label: "사진 설명 (화면낭독기용)", widget: "string", required: false }
+              - name: "for_cards"
+                label: "'지금, 당신에게 필요한 쉼' 카드 4종"
+                widget: "object"
+                collapsed: true
+                fields:
+                  - name: "mother"
+                    label: "산모 카드"
+                    widget: "object"
+                    fields:
+                      - { name: "title", label: "제목", widget: "string" }
+                      - { name: "desc", label: "설명", widget: "string" }
+                      - { name: "more", label: "더보기 문구", widget: "string" }
+                      - { name: "image", label: "사진", widget: "image" }
+                      - { name: "alt", label: "사진 설명 (화면낭독기용)", widget: "string", required: false }
+                  - name: "face"
+                    label: "윤곽 카드"
+                    widget: "object"
+                    fields:
+                      - { name: "title", label: "제목", widget: "string" }
+                      - { name: "desc", label: "설명", widget: "string" }
+                      - { name: "more", label: "더보기 문구", widget: "string" }
+                      - { name: "image", label: "사진", widget: "image" }
+                      - { name: "alt", label: "사진 설명 (화면낭독기용)", widget: "string", required: false }
+                  - name: "focus"
+                    label: "수험생 카드"
+                    widget: "object"
+                    fields:
+                      - { name: "title", label: "제목", widget: "string" }
+                      - { name: "desc", label: "설명", widget: "string" }
+                      - { name: "more", label: "더보기 문구", widget: "string" }
+                      - { name: "image", label: "사진", widget: "image" }
+                      - { name: "alt", label: "사진 설명 (화면낭독기용)", widget: "string", required: false }
+                  - name: "scalp"
+                    label: "두피 카드"
+                    widget: "object"
+                    fields:
+                      - { name: "title", label: "제목", widget: "string" }
+                      - { name: "desc", label: "설명", widget: "string" }
+                      - { name: "more", label: "더보기 문구", widget: "string" }
+                      - name: "images"
+                        label: "사진 (교차 표시 2장)"
+                        label_singular: "사진"
+                        widget: "list"
+                        min: 2
+                        max: 2
+                        allow_add: false
+                        fields:
+                          - { name: "image", label: "사진", widget: "image" }
+                          - { name: "alt", label: "사진 설명 (화면낭독기용)", widget: "string", required: false }
+              - name: "space"
+                label: "공간 섹션"
+                widget: "object"
+                fields:
+                  - { name: "title", label: "제목", widget: "string" }
+                  - { name: "desc", label: "소개 문장", widget: "text" }
+                  - name: "figures"
+                    label: "흐르는 갤러리 사진"
+                    label_singular: "사진"
+                    widget: "list"
+                    # max가 없으면 Decap이 min도 검증하지 않음(QA 확인) — 상한 필수
+                    min: 4
+                    max: 12
+                    hint: "이 갤러리는 자유롭게 추가·삭제할 수 있습니다 (4–12장)"
+                    summary: "{{fields.caption}}"
+                    fields:
+                      - { name: "image", label: "사진", widget: "image" }
+                      - { name: "caption", label: "사진 아래 라벨", widget: "string" }
+                      - { name: "alt", label: "사진 설명 (화면낭독기용)", widget: "string", required: false }
+              - name: "product"
+                label: "제품(조시안로르) 섹션"
+                widget: "object"
+                fields:
+                  - { name: "headline", label: "제목", widget: "text" }
+                  - { name: "desc", label: "본문", widget: "text" }
+                  - name: "creds"
+                    label: "경력 줄"
+                    label_singular: "경력"
+                    widget: "list"
+                    allow_add: false
+                    field: { name: "item", label: "경력", widget: "string" }
+              - name: "visit_band"
+                label: "하단 방문 안내 배너"
+                widget: "object"
+                fields:
+                  - { name: "headline", label: "제목", widget: "text" }
+                  - { name: "benefit", label: "영업시간 강조 문구", widget: "string" }
+          - name: "programs_page"
+            label: "프로그램 페이지"
+            widget: "object"
+            collapsed: true
+            fields:
+              - { name: "lede", label: "머리글", widget: "text" }
+              - { name: "cta_headline", label: "하단 상담 배너 제목", widget: "text" }
+          - name: "about"
+            label: "고운:선 이야기 페이지"
+            widget: "object"
+            collapsed: true
+            fields:
+              - name: "name_story"
+                label: "이름 이야기"
+                widget: "object"
+                fields:
+                  - { name: "title", label: "제목", widget: "string" }
+                  - { name: "body", label: "본문", widget: "text" }
+              - name: "director"
+                label: "원장 소개"
+                widget: "object"
+                fields:
+                  - { name: "photo", label: "프로필 사진", widget: "image", required: false, hint: "사진을 올리면 자리표시가 실제 사진으로 바뀝니다. 비우면 자리표시로 돌아갑니다" }
+                  - { name: "photo_alt", label: "사진 설명 (화면낭독기용)", widget: "string", required: false }
+                  - { name: "headline", label: "제목", widget: "text" }
+                  - { name: "body", label: "소개 문장", widget: "text" }
+                  - name: "creds"
+                    label: "약력"
+                    label_singular: "약력"
+                    widget: "list"
+                    allow_add: false
+                    field: { name: "item", label: "약력", widget: "string" }
+              - name: "product"
+                label: "제품 섹션"
+                widget: "object"
+                fields:
+                  - { name: "headline", label: "제목", widget: "text" }
+                  - { name: "desc", label: "본문", widget: "text" }
+              - name: "journey"
+                label: "고운:선에서의 시간 (4단계)"
+                label_singular: "단계"
+                widget: "list"
+                min: 4
+                max: 4
+                allow_add: false
+                summary: "{{fields.title}}"
+                fields:
+                  - { name: "title", label: "단계 제목", widget: "string", hint: "예: 01 — 상담" }
+                  - { name: "text", label: "설명", widget: "text" }
+                  - { name: "image", label: "사진", widget: "image" }
+                  - { name: "alt", label: "사진 설명 (화면낭독기용)", widget: "string", required: false }
+          - name: "visit"
+            label: "오시는 길 페이지"
+            widget: "object"
+            collapsed: true
+            fields:
+              - { name: "lede", label: "머리글", widget: "string" }
+              - { name: "hours_benefit", label: "영업시간 강조 문구", widget: "string" }
+              - { name: "parking", label: "주차 안내", widget: "text" }
+              - name: "first_visit"
+                label: "처음 오시는 분께 (3단계)"
+                label_singular: "단계"
+                widget: "list"
+                min: 3
+                max: 3
+                allow_add: false
+                summary: "{{fields.title}}"
+                fields:
+                  - { name: "title", label: "단계 제목", widget: "string" }
+                  - { name: "text", label: "설명", widget: "text" }

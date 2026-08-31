@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>고운:선 콘텐츠 관리</title>
+<link rel="icon" type="image/png" href="../assets/img/favicon.png">
+</head>
+<body>
+<!-- 버전 고정 — 운영 매뉴얼의 CMS 동작 설명(검증 시점 3.8.4)과 어긋나지 않게 유지 -->
+<script src="https://unpkg.com/decap-cms@3.8.4/dist/decap-cms.js"></script>
+<script>
+/* ==== 실시간 프리뷰 — 사이트 실제 CSS로 렌더 ==== */
+CMS.registerPreviewStyle('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600&family=Noto+Sans+KR:wght@300;400;500&family=Cormorant+Garamond:wght@500;600&display=swap');
+CMS.registerPreviewStyle('/assets/css/style.css?t=' + Date.now()); /* 어드민 리로드마다 최신 CSS */
+CMS.registerPreviewStyle(
+  'body{background:#FCF9F4;overflow-x:hidden}' +
+  '.pv-note{font:12px/1.6 sans-serif;color:#75654F;background:#F7F2EA;padding:10px 16px;border-bottom:1px solid rgba(0,0,0,.06)}' +
+  '.hero{min-height:520px}.hero .copy{padding-bottom:60px}' +
+  '.drift{overflow-x:auto}.drift-track{width:max-content}',
+  { raw: true }
+);
+
+(function () {
+  var h = window.h, createClass = window.createClass;
+
+  function fmt(n) { return (typeof n === 'number' ? n : 0).toLocaleString('ko-KR'); }
+  function tier(price, d) { return Math.floor(price * (100 - d) / 100 / 1000) * 1000; }
+
+  var Preview = createClass({
+    img: function (path) {
+      if (!path) return '';
+      var asset = this.props.getAsset(path);
+      var url = asset ? asset.toString() : path;
+      if (url.indexOf('assets/') === 0) url = '/' + url;
+      return url;
+    },
+    render: function () {
+      var self = this;
+      var d = this.props.entry.get('data');
+      d = d ? d.toJS() : {};
+      var g = d.global || {}, pr = d.pricing || {};
+      var home = d.home || {}, cats = d.categories || [];
+      var about = d.about || {}, visit = d.visit || {};
+      var hero = home.hero || {}, phil = home.philosophy || {};
+      var forCards = home.for_cards || {};
+      var space = home.space || {};
+      var prodHome = home.product || {};
+      var band = home.visit_band || {};
+
+      function findProg(name) {
+        for (var i = 0; i < cats.length; i++) {
+          var ps = cats[i].programs || [];
+          for (var j = 0; j < ps.length; j++) if (ps[j].name === name) return ps[j];
+        }
+        return null;
+      }
+
+      function chips(items) {
+        return h('div', { className: 'chips' },
+          (items || []).map(function (c, i) { return h('span', { key: i }, c); }));
+      }
+
+      function sigCard(ref, key) {
+        ref = ref || {};
+        var p = findProg(ref.program) || { name: ref.program || '?', minutes: '', price: 0, desc: '연결된 프로그램을 찾을 수 없습니다', components: [] };
+        return h('article', { className: 'sig-card', key: key },
+          h('img', { src: self.img(ref.image), alt: '' }),
+          h('div', { className: 'pad' },
+            h('div', { className: 'row' }, h('h3', {}, p.name),
+              h('span', { className: 'meta' }, p.minutes + '분 · ' + fmt(p.price) + '원')),
+            h('p', {}, p.desc || ''),
+            chips(p.components)));
+      }
+
+      function forCard(key) {
+        var c = forCards[key] || {};
+        var imgSrc = key === 'scalp'
+          ? (c.images && c.images[0] ? c.images[0].image : '')
+          : c.image;
+        return h('a', { className: 'for-card', key: key },
+          h('div', { className: 'imgwrap' }, h('img', { src: self.img(imgSrc), alt: '' })),
+          h('div', { className: 'pad' },
+            h('h3', {}, c.title || ''), h('p', {}, c.desc || ''),
+            h('span', { className: 'more' }, c.more || '')));
+      }
+
+      function priceBlock(p) {
+        return h('div', { className: 'price-block' },
+          h('div', { className: 'pb-row' },
+            h('span', { className: 'min' }, (p.minutes || 0) + '분'),
+            h('span', { className: 'price' }, fmt(p.price) + '원')),
+          h('div', { className: 'tierline' },
+            '5회 ' + fmt(tier(p.price || 0, pr.discount_5 || 0)) +
+            ' · 10회 ' + fmt(tier(p.price || 0, pr.discount_10 || 0)) +
+            ' · 멤버십 ' + fmt(tier(p.price || 0, pr.discount_member || 0))));
+      }
+
+      function catMeta(cat) {
+        var ps = cat.programs || [];
+        if (!ps.length) return '';
+        var mins = ps.map(function (p) { return p.minutes || 0; });
+        var prices = ps.map(function (p) { return p.price || 0; });
+        return Math.min.apply(null, mins) + '–' + Math.max.apply(null, mins) + '분 · ' +
+               fmt(Math.min.apply(null, prices)) + '원부터';
+      }
+
+      return h('div', {},
+        h('div', { className: 'pv-note' }, '미리보기 — 실제 사이트의 서체·색·카드로 표시됩니다. 저장(Publish)하면 사이트에 반영됩니다.'),
+
+        /* 히어로 */
+        h('section', { className: 'hero' },
+          h('img', { className: 'bg', src: '/assets/img/hero.jpg', alt: '' }),
+          h('div', { className: 'shade' }),
+          h('div', { className: 'copy container' },
+            h('div', { className: 'eyebrow' }, 'PREMIUM WELLNESS SPA · YONGIN SUJI'),
+            h('h1', {}, hero.headline || ''),
+            h('p', { className: 'sub' }, hero.sub || ''),
+            h('div', { className: 'actions' },
+              h('a', { className: 'btn btn-light' }, '프로그램 보기'),
+              h('a', { className: 'btn btn-ghost-light' }, '전화 예약')))),
+
+        /* 철학 */
+        h('section', { className: 'section' },
+          h('div', { className: 'container story' },
+            h('div', { className: 'eyebrow' }, 'OUR PHILOSOPHY'),
+            h('h2', { className: 'headline' }, phil.headline || ''),
+            h('div', { className: 'divider' }),
+            h('p', { className: 'body' }, phil.body || ''))),
+
+        /* 진심의 문장 */
+        h('section', { className: 'section', style: { textAlign: 'center', padding: '70px 20px' } },
+          h('p', { style: { fontFamily: 'var(--serif)', fontSize: '24px', color: 'var(--ink)' } },
+            home.reveal_sentence || ''),
+          h('p', { style: { fontSize: '12px', color: 'var(--muted)' } },
+            '(사이트에서는 스크롤에 따라 단어가 하나씩 떠오릅니다)')),
+
+        /* 시그니처 */
+        h('section', { className: 'section on-cream', style: { background: 'var(--card)' } },
+          h('div', { className: 'container' },
+            h('div', { className: 'section-head' },
+              h('div', { className: 'eyebrow' }, 'SIGNATURE RITUALS'),
+              h('h2', { className: 'section-title' }, '고운:선의 시그니처')),
+            h('div', { className: 'sig-grid' },
+              (home.sig_cards || []).map(sigCard)))),
+
+        /* For You */
+        h('section', { className: 'section' },
+          h('div', { className: 'container' },
+            h('div', { className: 'section-head center' },
+              h('div', { className: 'eyebrow' }, 'FOR YOU'),
+              h('h2', { className: 'section-title' }, '지금, 당신에게 필요한 쉼')),
+            h('div', { className: 'for-grid' },
+              ['mother', 'face', 'focus', 'scalp'].map(forCard)))),
+
+        /* 공간 */
+        h('section', { className: 'section on-dark space-sec' },
+          h('div', { className: 'container' },
+            h('div', { className: 'space-head' },
+              h('div', { className: 'section-head', style: { margin: 0 } },
+                h('div', { className: 'eyebrow' }, 'THE SPACE'),
+                h('h2', { className: 'section-title' }, space.title || '')),
+              h('p', {}, space.desc || ''))),
+          h('div', { className: 'drift' },
+            h('div', { className: 'drift-track' },
+              (space.figures || []).map(function (f, i) {
+                return h('figure', { key: i },
+                  h('img', { src: self.img(f.image), alt: '' }),
+                  h('figcaption', {}, f.caption || ''));
+              })))),
+
+        /* 제품 */
+        h('section', { className: 'section', style: { background: 'var(--card)' } },
+          h('div', { className: 'container product-split' },
+            h('img', { className: 'main', src: '/assets/img/products-set.jpg', alt: '' }),
+            h('div', { className: 'text' },
+              h('div', { className: 'eyebrow' }, 'JOSIANE LAURE, PARIS'),
+              h('h2', {}, prodHome.headline || ''),
+              h('p', { className: 'desc' }, prodHome.desc || ''),
+              h('div', { className: 'cred' },
+                (prodHome.creds || []).map(function (c, i) { return h('span', { key: i }, c); }))))),
+
+        /* 프로그램 미리보기 */
+        h('section', { className: 'section' },
+          h('div', { className: 'container' },
+            h('div', { className: 'section-head' },
+              h('div', { className: 'eyebrow' }, 'PROGRAMS'),
+              h('h2', { className: 'section-title' }, '프로그램 안내')),
+            h('div', { className: 'prev-list' },
+              cats.map(function (cat, i) {
+                return h('a', { className: 'prev-item', key: i },
+                  h('span', { className: 'name' }, cat.name || ''),
+                  h('span', { className: 'eng' }, (cat.eng || '').split('·').pop().trim()),
+                  h('span', { className: 'desc' }, cat.short_desc || ''),
+                  h('span', { className: 'meta' }, catMeta(cat)),
+                  h('span', { className: 'arrow' }, '›'));
+              })),
+            h('p', { className: 'fineprint' },
+              (pr.vat_note || '') + ' · 5회 선결제 −' + (pr.discount_5 || 0) + '% · 10회 선결제 −' +
+              (pr.discount_10 || 0) + '% · 멤버십 −' + (pr.discount_member || 0) + '% · 예약제 운영'))),
+
+        /* 프로그램 상세 (전 카테고리) */
+        cats.map(function (cat, i) {
+          return h('section', { className: 'category', key: 'cat' + i },
+            h('div', { className: 'container' },
+              h('div', { className: 'cat-head' },
+                h('h2', {}, cat.name || ''), h('span', { className: 'eng' }, cat.eng || '')),
+              h('p', { className: 'cat-desc' }, cat.desc || ''),
+              h('div', { className: 'prog-list' },
+                (cat.programs || []).map(function (p, j) {
+                  return h('article', { className: 'prog', key: j },
+                    h('div', { className: 'head' },
+                      h('div', { className: 'name-row' },
+                        h('h3', {}, p.name || ''),
+                        p.tag ? h('span', { className: 'tag' }, p.tag) : null)),
+                    h('div', { className: 'mid' },
+                      p.desc ? h('p', {}, p.desc) : null, chips(p.components)),
+                    priceBlock(p));
+                }))));
+        }),
+
+        /* 원장 소개 */
+        h('section', { className: 'section', style: { background: 'var(--card)' } },
+          h('div', { className: 'container director' },
+            ((about.director || {}).photo)
+              ? h('img', { className: 'photo', src: self.img(about.director.photo), alt: '' })
+              : h('div', { className: 'photo-slot' }, h('span', {}, '원장 프로필 사진 (자리표시)')),
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '18px' } },
+              h('div', { className: 'eyebrow' }, 'DIRECTOR'),
+              h('h2', {}, (about.director || {}).headline || ''),
+              h('p', { style: { fontWeight: 300, lineHeight: 2, color: 'var(--body)', margin: 0 } },
+                (about.director || {}).body || ''),
+              h('div', { className: 'creds' },
+                ((about.director || {}).creds || []).map(function (cr, i, arr) {
+                  return h('span', { className: 'c' + (i === arr.length - 1 ? ' now' : ''), key: i }, cr);
+                }))))),
+
+        /* 고운:선에서의 시간 */
+        h('section', { className: 'section on-dark' },
+          h('div', { className: 'container' },
+            h('div', { className: 'section-head center' },
+              h('div', { className: 'eyebrow' }, 'THE JOURNEY'),
+              h('h2', { className: 'section-title' }, '고운:선에서의 시간')),
+            h('div', { className: 'journey-grid' },
+              (about.journey || []).map(function (j, i) {
+                return h('figure', { key: i },
+                  h('img', { src: self.img(j.image), alt: '' }),
+                  h('figcaption', {},
+                    h('span', { className: 'step' }, j.title || ''),
+                    h('p', {}, j.text || '')));
+              })))),
+
+        /* 방문 밴드 */
+        h('section', { className: 'section visit-band on-dark' },
+          h('div', { className: 'container inner' },
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: '18px' } },
+              h('div', { className: 'eyebrow' }, 'VISIT US'),
+              h('h2', {}, band.headline || ''),
+              h('p', { className: 'addr' },
+                (g.address_road || '') + '\n' + (g.address_building || '') + ' ' + (g.address_room || ''))),
+            h('div', { className: 'hours' },
+              h('span', { className: 'benefit' }, band.benefit || ''),
+              h('div', { className: 'row' }, h('span', {}, '월 – 금'), h('span', {}, g.hours_weekday || '')),
+              h('div', { className: 'row' }, h('span', {}, '토요일'), h('span', {}, g.hours_sat || '')),
+              h('div', { className: 'row off' }, h('span', {}, '일요일'), h('span', {}, g.hours_sun || '')),
+              h('div', { className: 'note' },
+                (g.notice_reservation || '') + '\n' + (g.notice_pregnant || '') + '\n' + (g.notice_parking || ''))))),
+
+        /* 처음 오시는 분께 */
+        h('section', { className: 'section', style: { background: 'var(--card)' } },
+          h('div', { className: 'container' },
+            h('div', { className: 'section-head center' },
+              h('div', { className: 'eyebrow' }, 'FIRST VISIT'),
+              h('h2', { className: 'section-title' }, '처음 오시는 분께')),
+            h('div', { className: 'steps-grid' },
+              ((visit.first_visit) || []).map(function (s, i) {
+                return h('div', { className: 'step-card', key: i },
+                  h('span', { className: 'n' }, ('0' + (i + 1)).slice(-2)),
+                  h('h3', {}, s.title || ''), h('p', {}, s.text || ''));
+              }))))
+      );
+    }
+  });
+
+  CMS.registerPreviewTemplate('main', Preview);
+})();
+</script>
+</body>
+</html>
