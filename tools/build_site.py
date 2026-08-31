@@ -184,7 +184,9 @@ VISIT = CONTENT['visit']
 PHONE = G['phone']
 TEL = f'tel:{PHONE}'
 
-# ⑨ 정식 오픈 시 채울 값 — 네이버 서치어드바이저에서 발급받은 content 문자열만 붙여넣기.
+SITE_URL = 'https://gowoonseon.com'  # 2026-08-31 확정 — canonical/og/sitemap 절대경로의 원천
+
+# 클라이언트 TODO — 네이버 서치어드바이저에서 발급받은 content 문자열만 붙여넣기.
 # 비어 있으면 메타 태그 자체가 출력되지 않음. (구글 서치콘솔은 DNS 인증 권장 — 태그 불필요)
 NAVER_SITE_VERIFICATION = ''
 
@@ -258,13 +260,13 @@ def _hours_spec(days, text):
             'opens': times[0], 'closes': times[1]}
 
 def jsonld(desc):
-    # ⑨ 도메인 확정 시: url 추가 + image를 SITE_URL 절대경로로
     data = {
         '@context': 'https://schema.org',
         '@type': 'DaySpa',
         'name': '고운:선',
+        'url': SITE_URL,
         'description': desc,
-        'image': 'assets/img/hero.jpg',
+        'image': f'{SITE_URL}/assets/img/hero.jpg',
         'telephone': '+82-' + PHONE[1:],
         'address': {
             '@type': 'PostalAddress',
@@ -286,10 +288,22 @@ def jsonld(desc):
     return ('<script type="application/ld+json">'
             + json.dumps(data, ensure_ascii=False) + '</script>')
 
-def head(title, desc, page):
+def canonical_url(path):
+    """'index.html' → 'https://gowoonseon.com/', 그 외 → '/<파일명>'."""
+    return SITE_URL + '/' + ('' if path == 'index.html' else path)
+
+def head(title, desc, page, path=None):
     ld = ('\n' + jsonld(desc)) if page == 'home' else ''
     if NAVER_SITE_VERIFICATION:
         ld += f'\n<meta name="naver-site-verification" content="{NAVER_SITE_VERIFICATION}">'
+    # 404 등 path 없는 페이지는 canonical/og:url 없이 + noindex
+    if path:
+        canon = (f'\n<link rel="canonical" href="{canonical_url(path)}">'
+                 f'\n<meta property="og:url" content="{canonical_url(path)}">')
+        robots = ''
+    else:
+        canon = ''
+        robots = '\n<meta name="robots" content="noindex">'
     title, desc = html.escape(title, quote=False), html.escape(desc, quote=False)
     return f'''<!doctype html>
 <html lang="ko">
@@ -297,12 +311,12 @@ def head(title, desc, page):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
-<meta name="description" content="{desc}">
-<meta name="robots" content="noindex">  <!-- 데모 단계 — 정식 오픈 시 제거 -->
+<meta name="description" content="{desc}">{robots}{canon}
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
-<meta property="og:image" content="assets/img/hero.jpg">
-<meta property="og:type" content="website">{ld}
+<meta property="og:image" content="{SITE_URL}/assets/img/hero.jpg">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="고운:선">{ld}
 <link rel="icon" type="image/png" href="assets/img/favicon.png?v={_v("assets/img/favicon.png")}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600&family=Noto+Sans+KR:wght@300;400;500&family=Cormorant+Garamond:wght@500;600&display=swap">
@@ -823,11 +837,42 @@ PAGES = [
      'visit', False, visit_body),
 ]
 
+notfound_body = '''
+<div class="page-head container">
+  <div class="eyebrow">404</div>
+  <h1>찾으시는 페이지가 없습니다</h1>
+  <p class="lede">주소가 바뀌었거나 잘못 입력된 것 같습니다.
+아래에서 원하시는 곳으로 이동해 주세요.</p>
+  <div class="map-links" style="justify-content: center; margin-top: 26px;">
+    <a href="index.html">홈으로</a>
+    <a href="programs.html">프로그램 안내</a>
+  </div>
+</div>'''
+PAGES.append(('404.html', '페이지를 찾을 수 없습니다 — 고운:선',
+              '요청하신 페이지가 존재하지 않습니다.', 'home', False, notfound_body))
+
 for fname, title, desc, key, overlay, body in PAGES:
-    html_out = head(title, desc, key) + header(key, overlay) + '\n<main>' + body + '\n</main>\n' + FOOTER
+    path = None if fname == '404.html' else fname
+    html_out = head(title, desc, key, path) + header(key, overlay) + '\n<main>' + body + '\n</main>\n' + FOOTER
     # 이미지도 내용 해시로 캐시버스팅 — 같은 파일명으로 교체해도 CDN/브라우저 캐시에 안 잡히게
     html_out = re.sub(r'src="assets/img/([^"?]+)"',
                       lambda m: f'src="assets/img/{m.group(1)}?v={_v("assets/img/" + m.group(1))}"', html_out)
     with open(os.path.join(OUT, fname), 'w', encoding='utf-8') as f:
         f.write(html_out)
     print('wrote', fname, len(html_out), 'bytes')
+
+with open(os.path.join(OUT, 'robots.txt'), 'w', encoding='utf-8') as f:
+    f.write(f'''User-agent: *
+Disallow: /admin/
+
+Sitemap: {SITE_URL}/sitemap.xml
+''')
+with open(os.path.join(OUT, 'sitemap.xml'), 'w', encoding='utf-8') as f:
+    urls = '\n'.join(f'  <url><loc>{canonical_url(p[0])}</loc></url>'
+                     for p in PAGES if p[0] != '404.html')
+    f.write(f'''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{urls}
+</urlset>
+''')
+print('wrote robots.txt, sitemap.xml')
