@@ -822,16 +822,16 @@ visit_body = f'''
 </section>'''
 
 PAGES = [
-    ('index.html', '고운:선 — 프리미엄 웰니스 스파 · 용인 수지 윤곽&산모관리',
+    ('index.html', '고운:선 | 프리미엄 웰니스 스파 · 용인 수지 윤곽&산모관리',
      '몸과 마음의 균형을 되찾는 프라이빗 웰니스 스파. 윤곽관리 · 산모관리 · 헤드스파 · 수험생 케어 — 용인 수지구 상현동.',
      'home', True, index_body),
-    ('programs.html', '프로그램 안내 — 고운:선',
+    ('programs.html', '프로그램 안내 | 고운:선',
      '전신·얼굴&헤드·부분바디·산모·수험생·웨딩 — 고운:선의 모든 프로그램과 가격 안내. 모든 가격은 부가세 포함입니다.',
      'programs', False, programs_body),
     ('about.html', '고운:선 이야기',
      '곱다, 그리고 선(線) — 고운:선의 철학, 원장, 조시안로르 제품, 그리고 공간의 이야기.',
      'about', False, about_body),
-    ('visit.html', '오시는 길 — 고운:선',
+    ('visit.html', '오시는 길 | 고운:선',
      '경기 용인시 수지구 광교중앙로 310 신명프라자 4층 404호 · 예약제 운영 · 지하주차장 주차등록 지원.',
      'visit', False, visit_body),
 ]
@@ -847,7 +847,7 @@ notfound_body = '''
     <a href="programs.html">프로그램 안내</a>
   </div>
 </div>'''
-PAGES.append(('404.html', '페이지를 찾을 수 없습니다 — 고운:선',
+PAGES.append(('404.html', '페이지를 찾을 수 없습니다 | 고운:선',
               '요청하신 페이지가 존재하지 않습니다.', 'home', False, notfound_body))
 
 for fname, title, desc, key, overlay, body in PAGES:
