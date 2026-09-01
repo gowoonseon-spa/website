@@ -668,9 +668,7 @@ programs_body = f'''
 </div>
 <nav class="cat-nav" aria-label="프로그램 카테고리"><div class="row container">{cat_nav}</div></nav>
 <div class="container" style="padding-top: 40px; padding-bottom: 46px;">
-  <div class="tiers">
-    {''.join(f'<a href="#membership"><span class="l">{t["name"]}</span><span class="v">−{t["discount"]}%</span></a>' for t in MEMBERSHIPS['tiers'])}
-  </div>
+  <p class="mem-hint"><a href="#membership">멤버십 혜택과 자세한 내용은 아래 멤버십 안내에서 확인하실 수 있습니다</a></p>
   <div class="legend"><span class="dline" aria-hidden="true"></span><span>가는 선의 길이는 관리 시간을 뜻합니다 — 90분</span></div>
 </div>
 {''.join(cat_sections)}
