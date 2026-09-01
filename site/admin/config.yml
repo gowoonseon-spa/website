@@ -92,7 +92,7 @@ collections:
                 fields:
                   - { name: "name", label: "프로그램 이름", widget: "string", hint: "홈 시그니처 카드에 연결된 이름(온전·얼굴:선)을 바꾸면 '홈 화면' 섹션의 연결 이름도 같이 바꿔야 합니다" }
                   - { name: "minutes", label: "관리 시간 (분)", widget: "number", value_type: "int", min: 10, max: 360 }
-                  - { name: "price", label: "정가 (원)", widget: "number", value_type: "int", min: 10000, max: 2000000, step: 1000, hint: "천원 단위 — 할인가(5회/10회/멤버십)는 할인율에 따라 자동 계산됩니다" }
+                  - { name: "price", label: "정가 (원)", widget: "number", value_type: "int", min: 10000, max: 2000000, step: 1000, hint: "천원 단위 — 멤버십 할인가는 멤버십 할인율에 따라 자동 계산됩니다" }
                   - name: "components"
                     label: "구성 (칩)"
                     label_singular: "구성"
