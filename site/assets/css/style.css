@@ -302,11 +302,16 @@ a:hover { color: #5C3D16; }
 .cat-nav .row::-webkit-scrollbar { display: none; }
 .cat-nav a { flex-shrink: 0; border: 1px solid var(--line); color: var(--chip); padding: 8px 18px; border-radius: 999px; font-size: 13px; white-space: nowrap; }
 .cat-nav a.active, .cat-nav a:hover { border-color: var(--amber); color: var(--deep); }
-.mem-hint { text-align: center; margin: 0; font-size: 12.5px; font-weight: 300; }
+.tiers { display: flex; max-width: 560px; margin: 0 auto; background: var(--card); border: 1px solid var(--line); }
+.tiers > a { flex: 1; display: flex; flex-direction: column; gap: 2px; align-items: center; padding: 16px 0; border-right: 1px solid var(--line); color: inherit; }
+.tiers > a:last-child { border-right: 0; background: #F3EADB; }
+.tiers > a:hover { background: #F3EADB; }
+.tiers .l { font-size: 11.5px; color: var(--muted); }
+.tiers > a:last-child .l { color: var(--gold); }
+.tiers .v { font-family: var(--serif); font-size: 19px; color: var(--deep); }
+.mem-hint { text-align: center; margin: 22px 0 0 0; font-size: 12.5px; font-weight: 300; }
 .mem-hint a { color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 2px; }
 .mem-hint a:hover { color: var(--gold); border-color: var(--gold); }
-.legend { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 22px auto 0 auto; font-size: 12px; color: var(--muted); }
-.legend .dline { width: 76px; }
 
 /* ============ membership (선불 충전형) ============ */
 .membership { background: var(--card); text-align: center; }
