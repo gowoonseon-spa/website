@@ -6,6 +6,7 @@ backend:
   repo: gowoonseon-spa/website
   branch: main
 
+
 media_folder: "site/assets/img"
 public_folder: "assets/img"
 
