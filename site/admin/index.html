@@ -314,5 +314,34 @@ CMS.registerPreviewStyle(
   CMS.registerPreviewTemplate('main', Preview);
 })();
 </script>
+<script>
+/* 고정 목록 보호 — Decap은 config로 리스트 삭제 버튼을 못 끄므로 DOM에서 숨긴다.
+   규칙: 그 리스트에 Add 버튼이 없으면(allow_add:false = 구조 동결) 항목의 ✕(삭제)·드래그 핸들을 숨김.
+   갤러리(space.figures)만 Add가 있으므로 자동으로 예외가 된다. 2026-09-01 프로덕션 DOM 실측 기준. */
+(function () {
+  function ownsAdd(container) {
+    var adds = container.querySelectorAll('[class*="AddButton"]');
+    for (var i = 0; i < adds.length; i++) {
+      if (adds[i].closest('[class*="ControlContainer"]') === container) return true;
+    }
+    return false;
+  }
+  function sweep() {
+    document.querySelectorAll('[class*="StyledListItemTopBar"]').forEach(function (bar) {
+      if (bar.dataset.gsGuard) return;
+      var container = bar.closest('[class*="ControlContainer"]');
+      if (!container) return;
+      bar.dataset.gsGuard = '1';
+      if (ownsAdd(container)) return;
+      var btns = bar.querySelectorAll(':scope > button');
+      if (btns.length) btns[btns.length - 1].style.display = 'none';
+      var drag = bar.querySelector('[aria-roledescription="sortable"]');
+      if (drag) drag.style.display = 'none';
+    });
+  }
+  new MutationObserver(sweep).observe(document.body, { childList: true, subtree: true });
+  sweep();
+})();
+</script>
 </body>
 </html>
