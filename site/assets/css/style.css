@@ -308,9 +308,9 @@ a:hover { color: #5C3D16; }
 .tiers > a:hover { background: #F3EADB; }
 .tiers .l { font-size: 11.5px; color: var(--muted); }
 .tiers .v { font-family: var(--serif); font-size: 19px; color: var(--deep); }
-.mem-hint { text-align: center; margin: 22px 0 0 0; font-size: 12.5px; font-weight: 300; }
-.mem-hint a { color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 2px; }
-.mem-hint a:hover { color: var(--gold); border-color: var(--gold); }
+.mem-hint { text-align: center; margin: 22px 16px 0; font-size: 12.5px; font-weight: 300; word-break: keep-all; text-wrap: balance; }
+.mem-hint a { color: var(--muted); text-decoration: underline; text-decoration-thickness: 1px; text-decoration-color: var(--line); text-underline-offset: 4px; }
+.mem-hint a:hover { color: var(--gold); text-decoration-color: var(--gold); }
 
 /* ============ membership (선불 충전형) ============ */
 .membership { background: var(--card); text-align: center; }
